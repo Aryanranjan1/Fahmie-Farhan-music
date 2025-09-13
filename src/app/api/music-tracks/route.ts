@@ -1,7 +1,45 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+if (
+  !process.env.CLOUDINARY_CLOUD_NAME ||
+  !process.env.CLOUDINARY_API_KEY ||
+  !process.env.CLOUDINARY_API_SECRET
+) {
+  console.error('Cloudinary environment variables are not set');
+} else {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+}
+
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'auto',
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          reject(error);
+        } else if (result) {
+          resolve(result.secure_url);
+        } else {
+          console.error('Cloudinary upload failed with no result');
+          reject(new Error('Cloudinary upload failed'));
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -21,7 +59,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
+        console.log('Starting music track creation...');
         const data = await request.formData();
+        console.log('Form data parsed.');
+
         const title = data.get('title') as string;
         const category = data.get('category') as string;
         const description = data.get('description') as string;
@@ -30,29 +71,25 @@ export async function POST(request: Request) {
         const featured = data.get('featured') === 'true';
 
         const audioFile: File | null = data.get('audioFile') as unknown as File;
-        const coverImageFile: File | null = data.get('coverImageFile') as unknown as File;
         
         if (!title || !audioFile) {
+            console.log('Missing title or audio file.');
             return NextResponse.json({ message: "Title and Audio File are required" }, { status: 400 });
         }
 
-        // Handle Audio File Upload
-        const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
-        const audioFilename = `${Date.now()}-${audioFile.name.replace(/\s/g, '_')}`;
-        const audioUploadPath = path.join(process.cwd(), 'public/uploads/audio', audioFilename);
-        await writeFile(audioUploadPath, audioBuffer);
-        const audioUrl = `/uploads/audio/${audioFilename}`;
+        console.log('Uploading audio file to Cloudinary...');
+        const audioUrl = await uploadToCloudinary(audioFile, 'audio');
+        console.log('Audio file uploaded:', audioUrl);
 
-        // Handle Cover Image Upload (Optional)
         let coverImageUrl: string | undefined = undefined;
+        const coverImageFile: File | null = data.get('coverImageFile') as unknown as File;
         if (coverImageFile) {
-            const imageBuffer = Buffer.from(await coverImageFile.arrayBuffer());
-            const imageFilename = `${Date.now()}-${coverImageFile.name.replace(/\s/g, '_')}`;
-            const imageUploadPath = path.join(process.cwd(), 'public/uploads/images', imageFilename);
-            await writeFile(imageUploadPath, imageBuffer);
-            coverImageUrl = `/uploads/images/${imageFilename}`;
+            console.log('Uploading cover image to Cloudinary...');
+            coverImageUrl = await uploadToCloudinary(coverImageFile, 'images');
+            console.log('Cover image uploaded:', coverImageUrl);
         }
         
+        console.log('Creating music track in database...');
         const newTrack = await prisma.musicTrack.create({
             data: {
                 title,
@@ -65,11 +102,16 @@ export async function POST(request: Request) {
                 coverImageUrl,
             }
         });
+        console.log('Music track created:', newTrack.id);
 
         return NextResponse.json(newTrack, { status: 201 });
 
-    } catch (error) {
-        console.error("Error creating music track:", error);
+    } catch (error: any) {
+        console.error("Error creating music track:", {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+        });
         return NextResponse.json({ message: "Failed to create music track" }, { status: 500 });
     }
-}
+} 

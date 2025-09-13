@@ -11,9 +11,9 @@ generator client {
 // prisma/schema.prisma
 
 datasource db {
-  // CHANGE THIS LINE
-  provider = "postgresql" 
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ... your models remain the same
@@ -135,4 +135,3 @@ model Stat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
