@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'auto',
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else if (result) {
+          resolve(result.secure_url);
+        } else {
+          reject(new Error('Cloudinary upload failed'));
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -36,21 +64,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: "Title and Audio File are required" }, { status: 400 });
         }
 
-        // Handle Audio File Upload
-        const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
-        const audioFilename = `${Date.now()}-${audioFile.name.replace(/\s/g, '_')}`;
-        const audioUploadPath = path.join(process.cwd(), 'public/uploads/audio', audioFilename);
-        await writeFile(audioUploadPath, audioBuffer);
-        const audioUrl = `/uploads/audio/${audioFilename}`;
+        const audioUrl = await uploadToCloudinary(audioFile, 'audio');
 
-        // Handle Cover Image Upload (Optional)
         let coverImageUrl: string | undefined = undefined;
         if (coverImageFile) {
-            const imageBuffer = Buffer.from(await coverImageFile.arrayBuffer());
-            const imageFilename = `${Date.now()}-${coverImageFile.name.replace(/\s/g, '_')}`;
-            const imageUploadPath = path.join(process.cwd(), 'public/uploads/images', imageFilename);
-            await writeFile(imageUploadPath, imageBuffer);
-            coverImageUrl = `/uploads/images/${imageFilename}`;
+            coverImageUrl = await uploadToCloudinary(coverImageFile, 'images');
         }
         
         const newTrack = await prisma.musicTrack.create({
