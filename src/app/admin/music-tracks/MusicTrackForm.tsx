@@ -10,9 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface MusicTrack {
   id?: string;
   title?: string;
-  category?: string;
+    category?: string;
   description?: string;
-  // audioUrl?: string; // Removed
+  audioUrl?: string;
   coverImageUrl?: string;
   fileSize?: string;
   published?: boolean;
@@ -29,10 +29,8 @@ export default function MusicTrackForm({ initialData, onSubmit, isSubmitting }: 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-  // const [audioUrl, setAudioUrl] = useState(''); // Removed
-  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState(''); // Changed to handle URL
+  const [coverImageUrl, setCoverImageUrl] = useState(''); // Changed to handle URL
   const [fileSize, setFileSize] = useState('');
   const [published, setPublished] = useState(false);
   const [featured, setFeatured] = useState(false);
@@ -42,8 +40,8 @@ export default function MusicTrackForm({ initialData, onSubmit, isSubmitting }: 
       setTitle(initialData.title || '');
       setCategory(initialData.category || '');
       setDescription(initialData.description || '');
-      // setAudioUrl(initialData.audioUrl || ''); // Removed
-      setCoverImageUrl(initialData.coverImageUrl || '');
+      setAudioUrl(initialData.audioUrl || ''); // Initialize with audioUrl
+      setCoverImageUrl(initialData.coverImageUrl || ''); // Initialize with coverImageUrl
       setFileSize(initialData.fileSize || '');
       setPublished(initialData.published || false);
       setFeatured(initialData.featured || false);
@@ -56,14 +54,11 @@ export default function MusicTrackForm({ initialData, onSubmit, isSubmitting }: 
     formData.append('title', title);
     formData.append('category', category);
     formData.append('description', description);
-    if (audioFile) {
-      formData.append('audioFile', audioFile);
+    formData.append('audioUrl', audioUrl); // Append audioUrl
+    // coverImageUrl will be fetched by backend if not provided, or can be manually set
+    if (coverImageUrl) {
+      formData.append('coverImageUrl', coverImageUrl);
     }
-    if (coverImageFile) {
-        formData.append('coverImageFile', coverImageFile);
-    }
-    // formData.append('audioUrl', audioUrl); // Removed
-    formData.append('coverImageUrl', coverImageUrl);
     formData.append('fileSize', fileSize);
     formData.append('published', String(published));
     formData.append('featured', String(featured));
@@ -84,25 +79,26 @@ export default function MusicTrackForm({ initialData, onSubmit, isSubmitting }: 
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-      {/* CHANGE: Added Cover Image Upload */}
       <div>
-        <Label htmlFor="coverImageFile">Cover Image (Leave blank to keep current)</Label>
-        {coverImageUrl && !coverImageFile && <img src={coverImageUrl} alt="Current cover" className="w-24 h-24 object-cover my-2" />}
+        <Label htmlFor="audioUrl">SoundCloud URL</Label>
         <Input
-          id="coverImageFile"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setCoverImageFile(e.target.files ? e.target.files[0] : null)}
+          id="audioUrl"
+          type="url"
+          value={audioUrl}
+          onChange={(e) => setAudioUrl(e.target.value)}
+          placeholder="e.g., https://soundcloud.com/your-track"
+          required
         />
       </div>
       <div>
-        <Label htmlFor="audioFile">Audio File (Leave blank to keep current)</Label>
-        {/* {audioUrl && !audioFile && <audio controls src={audioUrl} className="w-full my-2" />} // Removed */}
+        <Label htmlFor="coverImageUrl">Cover Image URL (Optional - will be fetched from SoundCloud if empty)</Label>
+        {coverImageUrl && <img src={coverImageUrl} alt="Current cover" className="w-24 h-24 object-cover my-2" />}
         <Input
-          id="audioFile"
-          type="file"
-          accept="audio/*"
-          onChange={(e) => setAudioFile(e.target.files ? e.target.files[0] : null)}
+          id="coverImageUrl"
+          type="url"
+          value={coverImageUrl}
+          onChange={(e) => setCoverImageUrl(e.target.value)}
+          placeholder="e.g., https://example.com/your-cover.jpg"
         />
       </div>
       <div>

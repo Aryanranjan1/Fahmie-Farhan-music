@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 // GET all testimonials
 export async function GET() {
@@ -19,7 +17,14 @@ export async function GET() {
 // POST a new testimonial
 export async function POST(req: Request) {
     try {
-        const { name, role, content, avatar, published, featured } = await req.json();
+        let body;
+        try {
+            body = await req.json();
+        } catch (jsonError) {
+            console.error('JSON parsing error:', jsonError);
+            return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+        }
+        const { name, role, content, avatar, published, featured } = body;
 
         if (!name || !content) {
             return NextResponse.json({ error: 'Name and content are required' }, { status: 400 });

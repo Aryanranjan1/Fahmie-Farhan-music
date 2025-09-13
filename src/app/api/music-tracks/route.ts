@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { db as prisma } from '@/lib/db';
+import axios from 'axios'; // Import axios for making HTTP requests
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -25,32 +24,27 @@ export async function POST(request: Request) {
         const title = data.get('title') as string;
         const category = data.get('category') as string;
         const description = data.get('description') as string;
-        const fileSize = data.get('fileSize') as string;
+        const fileSize = data.get('fileSize') as string; // This might become irrelevant if not uploading files
         const published = data.get('published') === 'true';
         const featured = data.get('featured') === 'true';
 
-        const audioFile: File | null = data.get('audioFile') as unknown as File;
-        const coverImageFile: File | null = data.get('coverImageFile') as unknown as File;
+        const audioUrlInput = data.get('audioUrl') as string; // Expecting SoundCloud URL
         
-        if (!title || !audioFile) {
-            return NextResponse.json({ message: "Title and Audio File are required" }, { status: 400 });
+        if (!title || !audioUrlInput) {
+            return NextResponse.json({ message: "Title and Audio URL are required" }, { status: 400 });
         }
 
-        // Handle Audio File Upload
-        const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
-        const audioFilename = `${Date.now()}-${audioFile.name.replace(/\s/g, '_')}`;
-        const audioUploadPath = path.join(process.cwd(), 'public/uploads/audio', audioFilename);
-        await writeFile(audioUploadPath, audioBuffer);
-        const audioUrl = `/uploads/audio/${audioFilename}`;
-
-        // Handle Cover Image Upload (Optional)
         let coverImageUrl: string | undefined = undefined;
-        if (coverImageFile) {
-            const imageBuffer = Buffer.from(await coverImageFile.arrayBuffer());
-            const imageFilename = `${Date.now()}-${coverImageFile.name.replace(/\s/g, '_')}`;
-            const imageUploadPath = path.join(process.cwd(), 'public/uploads/images', imageFilename);
-            await writeFile(imageUploadPath, imageBuffer);
-            coverImageUrl = `/uploads/images/${imageFilename}`;
+
+        // Fetch artwork from SoundCloud OEmbed API
+        try {
+            const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${audioUrlInput}&format=json`);
+            if (oembedResponse.data && oembedResponse.data.thumbnail_url) {
+                coverImageUrl = oembedResponse.data.thumbnail_url;
+            }
+        } catch (oembedError) {
+            console.warn("Could not fetch SoundCloud artwork:", oembedError);
+            // Optionally, set a default cover image or handle this error differently
         }
         
         const newTrack = await prisma.musicTrack.create({
@@ -58,10 +52,10 @@ export async function POST(request: Request) {
                 title,
                 category,
                 description,
-                fileSize,
+                fileSize, // Keep for now, might be removed later if truly irrelevant
                 published,
                 featured,
-                audioUrl,
+                audioUrl: audioUrlInput,
                 coverImageUrl,
             }
         });
