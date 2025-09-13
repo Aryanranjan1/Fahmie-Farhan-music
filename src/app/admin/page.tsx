@@ -48,8 +48,8 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
-    const [audioFile, setAudioFile] = useState<File | null>(null);
-    const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+    const [audioUrl, setAudioUrl] = useState('');
+    const [coverImageUrl, setCoverImageUrl] = useState('');
     const [published, setPublished] = useState(false);
     const [featured, setFeatured] = useState(false);
 
@@ -58,17 +58,19 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
             setTitle(initialData.title || '');
             setCategory(initialData.category || '');
             setDescription(initialData.description || '');
+            setAudioUrl(initialData.audioUrl || '');
+            setCoverImageUrl(initialData.coverImageUrl || '');
             setPublished(initialData.published || false);
             setFeatured(initialData.featured || false);
         } else {
             setTitle('');
             setCategory('');
             setDescription('');
+            setAudioUrl('');
+            setCoverImageUrl('');
             setPublished(false);
             setFeatured(false);
         }
-        setAudioFile(null);
-        setCoverImageFile(null);
     }, [initialData]);
 
 
@@ -77,9 +79,9 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
         const formData = new FormData();
         formData.append('title', title);
         formData.append('category', category);
-        formData.append('description', description);
-        if (audioFile) formData.append('audioFile', audioFile);
-        if (coverImageFile) formData.append('coverImageFile', coverImageFile);
+                formData.append('description', description);
+        formData.append('audioUrl', audioUrl);
+        if (coverImageUrl) formData.append('coverImageUrl', coverImageUrl);
         formData.append('published', String(published));
         formData.append('featured', String(featured));
         onSubmit(formData);
@@ -92,14 +94,14 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
             <div><Label htmlFor="category">Category</Label><Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
             <div><Label htmlFor="description">Description</Label><Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
             <div>
-                <Label htmlFor="coverImageFile">Cover Image (Leave blank to keep current)</Label>
-                {initialData?.coverImageUrl && <img src={initialData.coverImageUrl} alt="Current" className="w-20 h-20 my-2 rounded-md object-cover" loading="eager"/>}
-                <Input id="coverImageFile" type="file" accept="image/*" onChange={(e) => setCoverImageFile(e.target.files ? e.target.files[0] : null)} />
+                <Label htmlFor="audioUrl">Audio URL</Label>
+                {initialData?.audioUrl && <audio controls src={initialData.audioUrl} className="w-full my-2 h-10" />}
+                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://example.com/audio.mp3" />
             </div>
             <div>
-                <Label htmlFor="audioFile">Audio File (MP3)</Label>
-                {initialData?.audioUrl && <audio controls src={initialData.audioUrl} className="w-full my-2 h-10" />}
-                <Input id="audioFile" type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files ? e.target.files[0] : null)} />
+                <Label htmlFor="coverImageUrl">Cover Image URL</Label>
+                {initialData?.coverImageUrl && <img src={initialData.coverImageUrl} alt="Current" className="w-20 h-20 my-2 rounded-md object-cover" loading="eager"/>}
+                <Input id="coverImageUrl" type="url" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="e.g., https://example.com/cover.jpg" />
             </div>
             <div className="flex items-center space-x-2"><Checkbox id="published" checked={published} onCheckedChange={(c) => setPublished(Boolean(c))} /><Label htmlFor="published">Published</Label></div>
             <div className="flex items-center space-x-2"><Checkbox id="featured" checked={featured} onCheckedChange={(c) => setFeatured(Boolean(c))} /><Label htmlFor="featured">Featured</Label></div>
