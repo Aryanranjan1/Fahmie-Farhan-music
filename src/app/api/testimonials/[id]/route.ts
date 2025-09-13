@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/db';
+import { v2 as cloudinary } from 'cloudinary';
 
-const prisma = new PrismaClient();
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'auto',
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else if (result) {
+          resolve(result.secure_url);
+        } else {
+          reject(new Error('Cloudinary upload failed'));
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+}
 
 // GET a single testimonial by ID
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -25,7 +53,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
     try {
         const { id } = params;
-        const { name, role, content, avatar, published, featured } = await req.json();
+        const data = await req.formData();
+        const name = data.get('name') as string;
+        const role = data.get('role') as string;
+        const content = data.get('content') as string;
+        const published = data.get('published') === 'true';
+        const featured = data.get('featured') === 'true';
+        const avatarFile: File | null = data.get('avatar') as unknown as File;
+
+        let avatarUrl: string | undefined = undefined;
+        if (avatarFile) {
+            avatarUrl = await uploadToCloudinary(avatarFile, 'testimonials');
+        }
 
         const updatedTestimonial = await prisma.testimonial.update({
             where: { id },
@@ -33,9 +72,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 name: name || undefined,
                 role: role || undefined,
                 content: content || undefined,
-                avatar: avatar || undefined,
-                published: published !== undefined ? published : undefined,
-                featured: featured !== undefined ? featured : undefined,
+                avatar: avatarUrl,
+                published: published,
+                featured: featured,
             },
         });
 
