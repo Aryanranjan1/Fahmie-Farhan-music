@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+
+
 
 const prisma = new PrismaClient();
 
@@ -26,24 +26,17 @@ export async function POST(request: Request) {
         const description = data.get('description') as string;
         const published = data.get('published') === 'true';
         const featured = data.get('featured') === 'true';
-        const videoFile: File | null = data.get('videoFile') as unknown as File;
+        
 
         if (!title) {
             return NextResponse.json({ message: "Title is required" }, { status: 400 });
         }
         
-        if (!videoId && !videoFile) {
-            return NextResponse.json({ message: "Either a YouTube Video ID or a video file upload is required" }, { status: 400 });
+        if (!videoId) {
+            return NextResponse.json({ message: "YouTube Video ID is required" }, { status: 400 });
         }
 
-        let videoFileUrl: string | undefined = undefined;
-        if (videoFile) {
-            const fileBuffer = Buffer.from(await videoFile.arrayBuffer());
-            const filename = `${Date.now()}-${videoFile.name.replace(/\s/g, '_')}`;
-            const uploadPath = path.join(process.cwd(), 'public/uploads/videos', filename);
-            await writeFile(uploadPath, fileBuffer);
-            videoFileUrl = `/uploads/videos/${filename}`;
-        }
+        
 
         const newVideo = await prisma.video.create({
             data: {
@@ -53,7 +46,6 @@ export async function POST(request: Request) {
                 description,
                 published,
                 featured,
-                videoFileUrl,
             }
         });
 

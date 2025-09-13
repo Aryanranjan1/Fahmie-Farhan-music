@@ -63,7 +63,7 @@ model Video {
   id            String    @id @default(cuid())
   title         String
   videoId       String?   // For optional YouTube links
-  videoFileUrl  String?   // For your MP4 uploads
+  
   category      String?
   description   String?
   published     Boolean   @default(false)

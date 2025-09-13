@@ -12,14 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function NewVideoPage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [videoId, setVideoId] = useState('');
-  // const [youtubeUrl, setYoutubeUrl] = useState(''); // Removed
-  
   const [category, setCategory] = useState('');
-  const [views, setViews] = useState('');
   const [published, setPublished] = useState(false);
   const [featured, setFeatured] = useState(false);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,17 +27,12 @@ export default function NewVideoPage() {
 
     const formData = new FormData();
     formData.append('title', title);
-    formData.append('videoId', videoId);
-    // formData.append('youtubeUrl', youtubeUrl); // Removed
     formData.append('category', category);
-    formData.append('views', views);
     formData.append('published', String(published));
     formData.append('featured', String(featured));
     formData.append('description', description);
 
-    if (videoFile) {
-      formData.append('videoFile', videoFile);
-    }
+    
 
     try {
       const response = await fetch('/api/videos', {
@@ -79,26 +70,10 @@ export default function NewVideoPage() {
               <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="videoId">Video ID</Label>
-              <Input id="videoId" value={videoId} onChange={(e) => setVideoId(e.target.value)} required readOnly />
-            </div>
-            <div>
               <Label htmlFor="category">Category</Label>
               <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} />
             </div>
-            <div>
-              <Label htmlFor="views">Views</Label>
-              <Input id="views" value={views} onChange={(e) => setViews(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="videoFile">Video File (MP4)</Label>
-              <Input 
-                id="videoFile" 
-                type="file" 
-                accept="video/mp4" 
-                onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)}
-              />
-            </div>
+            
             <div>
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />

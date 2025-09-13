@@ -220,10 +220,6 @@ const SocialLinkForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
 };
 
 const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
-    const [name, setName] = useState('');
-    const [role, setRole] = useState('');
-    const [content, setContent] = useState('');
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [published, setPublished] = useState(false);
     const [featured, setFeatured] = useState(false);
 
@@ -241,7 +237,6 @@ const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any)
             setPublished(false);
             setFeatured(false);
         }
-        setAvatarFile(null);
     }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -249,8 +244,7 @@ const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any)
         const formData = new FormData();
         formData.append('name', name);
         formData.append('role', role);
-        formData.append('content', content);
-        if (avatarFile) formData.append('avatarFile', avatarFile);
+                formData.append('content', content);
         formData.append('published', String(published));
         formData.append('featured', String(featured));
         onSubmit(formData);
@@ -261,11 +255,6 @@ const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any)
             <div><Label htmlFor="name">Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} required /></div>
             <div><Label htmlFor="role">Role</Label><Input id="role" value={role} onChange={(e) => setRole(e.target.value)} /></div>
             <div><Label htmlFor="content">Content</Label><Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} required /></div>
-            <div>
-                <Label htmlFor="avatarFile">Avatar Image</Label>
-                {initialData?.avatar && <img src={initialData.avatar} alt="Current" className="w-20 h-20 my-2 rounded-full object-cover" loading="eager"/>}
-                <Input id="avatarFile" type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files ? e.target.files[0] : null)} />
-            </div>
             <div className="flex items-center space-x-2"><Checkbox id="published" checked={published} onCheckedChange={(c) => setPublished(Boolean(c))} /><Label htmlFor="published">Published</Label></div>
             <div className="flex items-center space-x-2"><Checkbox id="featured" checked={featured} onCheckedChange={(c) => setFeatured(Boolean(c))} /><Label htmlFor="featured">Featured</Label></div>
             <div className="flex justify-end space-x-2 pt-4">
