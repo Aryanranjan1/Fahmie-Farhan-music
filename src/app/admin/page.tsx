@@ -115,7 +115,6 @@ const VideoForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
     const [videoId, setVideoId] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
-    const [videoFile, setVideoFile] = useState<File | null>(null);
     const [published, setPublished] = useState(false);
     const [featured, setFeatured] = useState(false);
 
@@ -135,7 +134,6 @@ const VideoForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
             setPublished(false);
             setFeatured(false);
         }
-        setVideoFile(null);
     }, [initialData]);
 
 
@@ -146,7 +144,7 @@ const VideoForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
         formData.append('videoId', videoId);
         formData.append('category', category);
         formData.append('description', description);
-        if (videoFile) formData.append('videoFile', videoFile);
+        
         formData.append('published', String(published));
         formData.append('featured', String(featured));
         onSubmit(formData);
@@ -159,11 +157,7 @@ const VideoForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
             <div><Label htmlFor="videoId">YouTube Video ID (Optional)</Label><Input id="videoId" value={videoId} onChange={(e) => setVideoId(e.target.value)} /></div>
             <div><Label htmlFor="category">Category</Label><Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
             <div><Label htmlFor="description">Description</Label><Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-            <div>
-                <Label htmlFor="videoFile">Upload Video File (MP4)</Label>
-                {initialData?.videoFileUrl && <video controls src={initialData.videoFileUrl} className="w-full my-2 rounded-md" />}
-                <Input id="videoFile" type="file" accept="video/mp4" onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)} />
-            </div>
+            
             <div className="flex items-center space-x-2"><Checkbox id="published" checked={published} onCheckedChange={(c) => setPublished(Boolean(c))} /><Label htmlFor="published">Published</Label></div>
             <div className="flex items-center space-x-2"><Checkbox id="featured" checked={featured} onCheckedChange={(c) => setFeatured(Boolean(c))} /><Label htmlFor="featured">Featured</Label></div>
             <div className="flex justify-end space-x-2 pt-4"><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save'}</Button></div>
@@ -222,6 +216,9 @@ const SocialLinkForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
 };
 
 const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) => {
+    const [name, setName] = useState('');
+    const [role, setRole] = useState('');
+    const [content, setContent] = useState('');
     const [published, setPublished] = useState(false);
     const [featured, setFeatured] = useState(false);
 
