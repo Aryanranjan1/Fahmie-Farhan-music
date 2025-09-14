@@ -94,9 +94,18 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
             <div><Label htmlFor="category">Category</Label><Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
             <div><Label htmlFor="description">Description</Label><Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
             <div>
-                <Label htmlFor="audioUrl">Audio URL</Label>
-                {initialData?.audioUrl && <audio controls src={initialData.audioUrl} className="w-full my-2 h-10" />}
-                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://example.com/audio.mp3" />
+                <Label htmlFor="audioUrl">SoundCloud Track URL</Label>
+                {initialData?.audioUrl && (
+                    <iframe
+                        width="100%"
+                        height="166"
+                        scrolling="no"
+                        frameBorder="no"
+                        allow="autoplay"
+                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(initialData.audioUrl)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
+                    ></iframe>
+                )}
+                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://soundcloud.com/your-track" />
             </div>
             <div>
                 <Label htmlFor="coverImageUrl">Cover Image URL</Label>
@@ -240,13 +249,13 @@ const TestimonialForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('role', role);
-                formData.append('content', content);
-        formData.append('published', String(published));
-        formData.append('featured', String(featured));
-        onSubmit(formData);
+        onSubmit({ // Pass a plain object
+            name,
+            role,
+            content,
+            published,
+            featured,
+        });
     };
 
     return (
@@ -460,12 +469,16 @@ export default function AdminPage() {
     };
 
     // --- Testimonial Handlers ---
-    const handleTestimonialFormSubmit = async (formData: FormData) => {
+    const handleTestimonialFormSubmit = async (data: any) => {
         setIsSubmitting(true);
         const method = editingTestimonial ? 'PUT' : 'POST';
         const url = editingTestimonial ? `/api/testimonials/${editingTestimonial.id}` : '/api/testimonials';
         try {
-            const response = await fetch(url, { method, body: formData });
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
             if (!response.ok) throw new Error('Failed to save testimonial');
             alert("Testimonial saved successfully!");
             setIsTestimonialModalOpen(false);
