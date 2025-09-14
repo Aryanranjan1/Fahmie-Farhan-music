@@ -94,18 +94,11 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
             <div><Label htmlFor="category">Category</Label><Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
             <div><Label htmlFor="description">Description</Label><Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
             <div>
-                <Label htmlFor="audioUrl">SoundCloud Track URL</Label>
+                <Label htmlFor="audioUrl">Direct Audio URL</Label>
                 {initialData?.audioUrl && (
-                    <iframe
-                        width="100%"
-                        height="166"
-                        scrolling="no"
-                        frameBorder="no"
-                        allow="autoplay"
-                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(initialData.audioUrl)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
-                    ></iframe>
+                    <audio controls src={initialData.audioUrl} className="w-full my-2 h-10" />
                 )}
-                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://api.soundcloud.com/tracks/YOUR_TRACK_ID" />
+                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://your-cloud-storage.com/path/to/audio.mp3" />
             </div>
             <div>
                 <Label htmlFor="coverImageUrl">Cover Image URL</Label>

@@ -53,6 +53,7 @@ model MusicTrack {
   published      Boolean   @default(false)
   featured       Boolean   @default(false)
   audioUrl       String?
+  audioFilePath  String? // New field for direct audio file uploads
   coverImageUrl  String?   // CHANGE: Added this new field for the cover image
   fileSize       String?   // Added this field
   createdAt      DateTime  @default(now())

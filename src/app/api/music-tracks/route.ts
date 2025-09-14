@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
-import axios from 'axios'; // Import axios for making HTTP requests
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -36,19 +35,6 @@ export async function POST(request: Request) {
 
         let coverImageUrl: string | undefined = undefined;
 
-        // Fetch artwork from SoundCloud OEmbed API
-        // The oEmbed endpoint expects a page URL, not an API URL.
-        // We'll try to derive a page URL from the audioUrlInput (which is now an API URL).
-        const soundcloudPageUrl = audioUrlInput.replace('api.soundcloud.com/tracks/', 'soundcloud.com/');
-        try {
-            const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${soundcloudPageUrl}&format=json`);
-            if (oembedResponse.data && oembedResponse.data.thumbnail_url) {
-                coverImageUrl = oembedResponse.data.thumbnail_url;
-            }
-        } catch (oembedError) {
-            console.warn("Could not fetch SoundCloud artwork:", oembedError);
-            // Optionally, set a default cover image or handle this error differently
-        }
         
         const newTrack = await prisma.musicTrack.create({
             data: {
