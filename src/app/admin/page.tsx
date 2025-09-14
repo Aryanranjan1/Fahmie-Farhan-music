@@ -105,7 +105,7 @@ const MusicTrackForm = ({ initialData, onSubmit, isSubmitting, onCancel }: any) 
                         src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(initialData.audioUrl)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
                     ></iframe>
                 )}
-                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://soundcloud.com/your-track" />
+                <Input id="audioUrl" type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} placeholder="e.g., https://api.soundcloud.com/tracks/YOUR_TRACK_ID" />
             </div>
             <div>
                 <Label htmlFor="coverImageUrl">Cover Image URL</Label>

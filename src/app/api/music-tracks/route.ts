@@ -37,8 +37,11 @@ export async function POST(request: Request) {
         let coverImageUrl: string | undefined = undefined;
 
         // Fetch artwork from SoundCloud OEmbed API
+        // The oEmbed endpoint expects a page URL, not an API URL.
+        // We'll try to derive a page URL from the audioUrlInput (which is now an API URL).
+        const soundcloudPageUrl = audioUrlInput.replace('api.soundcloud.com/tracks/', 'soundcloud.com/');
         try {
-            const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${audioUrlInput}&format=json`);
+            const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${soundcloudPageUrl}&format=json`);
             if (oembedResponse.data && oembedResponse.data.thumbnail_url) {
                 coverImageUrl = oembedResponse.data.thumbnail_url;
             }

@@ -70,8 +70,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         // If audioUrl is provided and has changed, fetch new cover image from SoundCloud
         if (audioUrlInput && audioUrlInput !== existingTrack.audioUrl) {
             audioUrl = audioUrlInput;
+            // The oEmbed endpoint expects a page URL, not an API URL.
+            // We'll try to derive a page URL from the audioUrlInput (which is now an API URL).
+            const soundcloudPageUrl = audioUrlInput.replace('api.soundcloud.com/tracks/', 'soundcloud.com/');
             try {
-                const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${audioUrlInput}&format=json`);
+                const oembedResponse = await axios.get(`https://soundcloud.com/oembed?url=${soundcloudPageUrl}&format=json`);
                 if (oembedResponse.data && oembedResponse.data.thumbnail_url) {
                     coverImageUrl = oembedResponse.data.thumbnail_url;
                 }
