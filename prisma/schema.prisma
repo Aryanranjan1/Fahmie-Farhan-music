@@ -27,18 +27,21 @@ model User {
 }
 
 model Post {
-  id          String   @id @default(cuid())
-  title       String
-  content     String?
-  excerpt     String?
-  category    String?
-  tags        String?
-  featured    Boolean  @default(false)
-  published   Boolean  @default(false)
-  views       Int      @default(0)
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  content       String?
+  excerpt       String?
+  category      String?
+  tags          String?
+  featured      Boolean  @default(false)
+  published     Boolean  @default(false)
+  views         Int      @default(0)
+  authorId      String
+  coverImageUrl String? // Added for blog post cover image
+  seoTitle      String? // New field for SEO title
+  seoDescription String? // New field for SEO description
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // prisma/schema.prisma

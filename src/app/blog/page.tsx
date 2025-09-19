@@ -23,6 +23,7 @@ interface BlogPost {
   featured: boolean;
   published: boolean;
   views: number;
+  coverImageUrl?: string;
 }
 
 const categories = ["All", "Composition", "Cultural Heritage", "Behind the Scenes", "Industry Insights", "Business", "Collaboration"];
@@ -165,7 +166,7 @@ export default function BlogPage() {
                 <Card className="bg-charcoal-dark border-fantasy-gold/20 overflow-hidden hover:border-fantasy-gold/40 transition-all hover:transform hover:scale-105">
                   <div className="aspect-video bg-gradient-to-br from-fantasy-gold/10 to-purple-500/10 relative overflow-hidden">
                       <img
-                        src={`https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&h=400&fit=crop&auto=format`}
+                        src={post.coverImageUrl || '/placeholder-cover.png'}
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />
@@ -297,7 +298,7 @@ export default function BlogPage() {
                     <CardHeader className="pb-2">
                       <div className="aspect-video bg-gradient-to-br from-fantasy-gold/10 to-purple-500/10 rounded-lg mb-4 relative overflow-hidden">
                         <img
-                          src={`https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&h=400&fit=crop&auto=format`}
+                          src={post.coverImageUrl || '/placeholder-cover.png'}
                           alt={post.title}
                           className="w-full h-full object-cover"
                         />

@@ -414,7 +414,7 @@ export default function AdminPage() {
     const handleDeleteBlogPost = async (id: string) => {
         if (confirm('Are you sure you want to delete this blog post?')) {
             try {
-                await fetch(`/api/blog/posts/${id}`, { method: 'DELETE' });
+                await fetch(`/api/blog/${id}`, { method: 'DELETE' });
                 alert("Blog post deleted successfully!");
                 await fetchData();
             } catch (error) {
@@ -528,10 +528,10 @@ export default function AdminPage() {
     }
     
     const stats = [
-        { title: "Total Music Tracks", value: musicTracks.length.toString(), change: "+2", icon: Music },
-        { title: "YouTube Videos", value: youtubeVideos.length.toString(), change: "+1", icon: Video },
-        { title: "Blog Posts", value: blogPosts.length.toString(), change: "+3", icon: FileText },
-        { title: "Social Links", value: socialLinks.length.toString(), change: "0", icon: Users },
+        { title: "Total Music Tracks", value: (musicTracks || []).length.toString(), change: "+2", icon: Music },
+        { title: "YouTube Videos", value: (youtubeVideos || []).length.toString(), change: "+1", icon: Video },
+        { title: "Blog Posts", value: (blogPosts || []).length.toString(), change: "+3", icon: FileText },
+        { title: "Social Links", value: (socialLinks || []).length.toString(), change: "0", icon: Users },
     ];
 
     return (

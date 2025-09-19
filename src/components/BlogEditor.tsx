@@ -8,21 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, 
   X, 
-  Image as ImageIcon, 
-  Video, 
-  Link as LinkIcon, 
-  FileText,
   Save,
-  Eye,
   Upload
 } from "lucide-react";
+import TiptapEditor from "./TiptapEditor";
 
 interface BlogPost {
-  id?: number;
+  id?: string;
   title: string;
   content: string;
   excerpt: string;
@@ -31,20 +26,11 @@ interface BlogPost {
   featured: boolean;
   status: "draft" | "published";
   publishedAt?: string;
-  author: string;
+  authorId: string;
   readTime: string;
-  image?: string;
+  coverImageUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
-}
-
-interface MediaItem {
-  id: string;
-  type: "image" | "video" | "link";
-  url: string;
-  title: string;
-  description?: string;
-  alt?: string;
 }
 
 export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: (post: BlogPost) => void }) {
@@ -56,15 +42,14 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
     tags: [],
     featured: false,
     status: "draft",
-    author: "Fahmie Farhan",
+    authorId: "Fahmie Farhan",
     readTime: "",
+    coverImageUrl: "",
     seoTitle: "",
     seoDescription: ""
   });
 
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [activeTab, setActiveTab] = useState("write");
 
   const categories = [
     "Composition",
@@ -79,6 +64,10 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
 
   const handleInputChange = (field: keyof BlogPost, value: string | boolean) => {
     setBlogPost(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleContentChange = (content: string) => {
+    setBlogPost(prev => ({ ...prev, content }));
   };
 
   const addTag = () => {
@@ -98,54 +87,13 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
     }));
   };
 
-  const addMediaItem = (type: "image" | "video" | "link") => {
-    const newItem: MediaItem = {
-      id: Date.now().toString(),
-      type,
-      url: "",
-      title: "",
-      description: "",
-      alt: ""
-    };
-    setMediaItems(prev => [...prev, newItem]);
-  };
-
-  const updateMediaItem = (id: string, field: keyof MediaItem, value: string) => {
-    setMediaItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
-  };
-
-  const removeMediaItem = (id: string) => {
-    setMediaItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  const insertMediaIntoContent = (item: MediaItem) => {
-    let mediaMarkdown = "";
-    
-    switch (item.type) {
-      case "image":
-        mediaMarkdown = `![${item.alt || item.title}](${item.url})`;
-        break;
-      case "video":
-        mediaMarkdown = `[![${item.title}](${item.url})](${item.url})`;
-        break;
-      case "link":
-        mediaMarkdown = `[${item.title}](${item.url})`;
-        break;
-    }
-    
-    setBlogPost(prev => ({
-      ...prev,
-      content: prev.content + "\n" + mediaMarkdown + "\n"
-    }));
-  };
-
   const calculateReadTime = (content: string) => {
+    if (typeof window === 'undefined') return '';
+    const div = document.createElement('div');
+    div.innerHTML = content;
+    const text = div.textContent || div.innerText || '';
     const wordsPerMinute = 200;
-    const words = content.split(/\s+/).length;
+    const words = text.split(/\s+/).filter(Boolean).length;
     const minutes = Math.ceil(words / wordsPerMinute);
     return `${minutes} min read`;
   };
@@ -161,13 +109,10 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
 
   const generateExcerpt = () => {
     if (blogPost.content) {
-      const plainText = blogPost.content
-        .replace(/#+\s*/g, '') // Remove headers
-        .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-        .replace(/\*([^*]+)\*/g, '$1') // Remove italic
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
-        .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1') // Remove images
-        .trim();
+      if (typeof window === 'undefined') return;
+      const div = document.createElement('div');
+      div.innerHTML = blogPost.content;
+      const plainText = (div.textContent || div.innerText || '').trim();
       
       const excerpt = plainText.length > 150 
         ? plainText.substring(0, 150) + "..." 
@@ -187,14 +132,6 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
               {post ? "Edit Blog Post" : "Create New Blog Post"}
             </CardTitle>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setActiveTab(activeTab === "write" ? "preview" : "write")}
-                className="border-fantasy-gold/20 text-fantasy-gold"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {activeTab === "write" ? "Preview" : "Edit"}
-              </Button>
               <Button
                 onClick={handleSave}
                 className="bg-fantasy-gold text-deep-black hover:bg-fantasy-gold/90"
@@ -267,149 +204,10 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
               <CardTitle className="text-fantasy-gold">Content</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="bg-charcoal-dark border-fantasy-gold/20">
-                  <TabsTrigger value="write">Write</TabsTrigger>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="write" className="mt-4">
-                  <Textarea
-                    value={blogPost.content}
-                    onChange={(e) => handleInputChange("content", e.target.value)}
-                    className="bg-deep-black border-fantasy-gold/20 text-text-white placeholder:text-text-muted min-h-[400px] font-mono text-sm"
-                    placeholder="Write your post content in Markdown...
-
-# Heading 1
-## Heading 2
-**Bold text**
-*Italic text*
-[Link text](url)
-![Image alt](image-url)"
-                  />
-                </TabsContent>
-                
-                <TabsContent value="preview" className="mt-4">
-                  <Card className="bg-deep-black border-fantasy-gold/20">
-                    <CardContent className="p-6">
-                      <div className="prose prose-invert max-w-none">
-                        {blogPost.content ? (
-                          <div dangerouslySetInnerHTML={{
-                            __html: blogPost.content
-                              .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                              .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                              .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                              .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                              .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                              .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" class="text-fantasy-gold hover:underline">$1</a>')
-                              .replace(/!\[([^\]]*)\]\(([^)]+)\)/gim, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />')
-                              .replace(/\n/gim, '<br>')
-                          }} />
-                        ) : (
-                          <p className="text-text-muted">No content to preview</p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Media Manager */}
-          <Card className="bg-charcoal-dark border-fantasy-gold/20">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-fantasy-gold">Media Library</CardTitle>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addMediaItem("image")}
-                    className="border-fantasy-gold/20 text-fantasy-gold"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Add Image
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addMediaItem("video")}
-                    className="border-fantasy-gold/20 text-fantasy-gold"
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Add Video
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addMediaItem("link")}
-                    className="border-fantasy-gold/20 text-fantasy-gold"
-                  >
-                    <LinkIcon className="w-4 h-4 mr-2" />
-                    Add Link
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {mediaItems.length === 0 ? (
-                <p className="text-text-muted text-center py-8">No media items added yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {mediaItems.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 bg-deep-black rounded-lg">
-                      <div className="flex-shrink-0">
-                        {item.type === "image" && <ImageIcon className="w-8 h-8 text-fantasy-gold" />}
-                        {item.type === "video" && <Video className="w-8 h-8 text-fantasy-gold" />}
-                        {item.type === "link" && <LinkIcon className="w-8 h-8 text-fantasy-gold" />}
-                      </div>
-                      
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          value={item.title}
-                          onChange={(e) => updateMediaItem(item.id, "title", e.target.value)}
-                          className="bg-charcoal-dark border-fantasy-gold/20 text-text-white"
-                          placeholder="Title"
-                        />
-                        <Input
-                          value={item.url}
-                          onChange={(e) => updateMediaItem(item.id, "url", e.target.value)}
-                          className="bg-charcoal-dark border-fantasy-gold/20 text-text-white"
-                          placeholder="URL"
-                        />
-                        {item.type === "image" && (
-                          <Input
-                            value={item.alt || ""}
-                            onChange={(e) => updateMediaItem(item.id, "alt", e.target.value)}
-                            className="bg-charcoal-dark border-fantasy-gold/20 text-text-white"
-                            placeholder="Alt text"
-                          />
-                        )}
-                      </div>
-                      
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => insertMediaIntoContent(item)}
-                          className="border-fantasy-gold/20 text-fantasy-gold"
-                        >
-                          Insert
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeMediaItem(item.id)}
-                          className="border-red-500/20 text-red-500"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <TiptapEditor
+                content={blogPost.content}
+                onChange={handleContentChange}
+              />
             </CardContent>
           </Card>
         </div>
@@ -478,26 +276,19 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
             </CardContent>
           </Card>
 
-          {/* Featured Image */}
+          {/* Cover Image URL */}
           <Card className="bg-charcoal-dark border-fantasy-gold/20">
             <CardHeader>
-              <CardTitle className="text-fantasy-gold">Featured Image</CardTitle>
+              <CardTitle className="text-fantasy-gold">Cover Image URL</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <Input
-                  value={blogPost.image || ""}
-                  onChange={(e) => handleInputChange("image", e.target.value)}
+                  value={blogPost.coverImageUrl || ""}
+                  onChange={(e) => handleInputChange("coverImageUrl", e.target.value)}
                   className="bg-deep-black border-fantasy-gold/20 text-text-white placeholder:text-text-muted"
                   placeholder="Image URL"
                 />
-                <Button
-                  variant="outline"
-                  className="w-full border-fantasy-gold/20 text-fantasy-gold"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Image
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -534,8 +325,8 @@ export default function BlogEditor({ post, onSave }: { post?: BlogPost; onSave: 
               <div>
                 <Label className="text-text-white">Author</Label>
                 <Input
-                  value={blogPost.author}
-                  onChange={(e) => handleInputChange("author", e.target.value)}
+                  value={blogPost.authorId}
+                  onChange={(e) => handleInputChange("authorId", e.target.value)}
                   className="bg-deep-black border-fantasy-gold/20 text-text-white"
                 />
               </div>

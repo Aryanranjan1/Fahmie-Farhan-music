@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 // GET all blog posts
 export async function GET(req: Request) {
@@ -30,7 +28,7 @@ export async function GET(req: Request) {
 // POST a new blog post
 export async function POST(req: Request) {
     try {
-        const { title, content, excerpt, category, tags, featured, published, authorId } = await req.json();
+        const { title, content, excerpt, category, tags, featured, published, authorId, coverImageUrl } = await req.json(); // Add coverImageUrl
 
         if (!title || !authorId) {
             return NextResponse.json({ error: 'Title and Author ID are required' }, { status: 400 });
@@ -46,6 +44,7 @@ export async function POST(req: Request) {
                 featured: featured || false,
                 published: published || false,
                 authorId,
+                coverImageUrl, // Add coverImageUrl here
             },
         });
 
