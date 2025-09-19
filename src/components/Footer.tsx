@@ -36,7 +36,9 @@ export default function Footer() {
         const response = await fetch("/api/social-links");
         if (response.ok) {
           const data = await response.json();
-          setSocialLinks(data);
+          if (Array.isArray(data)) {
+            setSocialLinks(data);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch social links:", error);
@@ -57,7 +59,7 @@ export default function Footer() {
               Fahmie Farhan Music - Epic orchestral compositions and modern Malay gamelan interpretations.
             </p>
             <div className="flex space-x-4">
-              {socialLinks.map((social) => {
+              {Array.isArray(socialLinks) && socialLinks.map((social) => {
                 const Icon = iconComponents[social.icon] || iconComponents.Default;
                 return (
                   <a
